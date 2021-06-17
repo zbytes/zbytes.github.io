@@ -1,0 +1,38 @@
+name: Continuous Integration
+on:
+  push:
+    branches-ignore:
+      - 'gh-pages'
+      - 'main'
+    tags-ignore:
+      - '*'
+    paths-ignore:
+      - '.github/**'
+      - '!.github/workflows/ci.yml'
+      - '.gitignore'
+      - 'README.md'
+      - 'LICENSE'
+  pull_request:
+    paths:
+      - '**'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+
+      - id: node-cache
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-dependencies-${{ hashFiles('**/package.json') }}
+          restore-keys: ${{ runner.os }}-dependencies-
+
+      - if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm install
+
+      - run: NODE_ENV=production npx hexo g
